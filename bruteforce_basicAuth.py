@@ -46,7 +46,7 @@ def main():
         for j, line2 in enumerate(d_passwords):
             password = line2[:-1]
 
-            head = str(i*j+j+1) + "/" + str(n_logins*n_passwords) + "\t" + login + ":" + password + "\t"
+            head = str(i*n_logins+j+1) + "/" + str(n_logins*n_passwords) + "\t" + login + ":" + password + "\t"
 
             try:
                 r = requests.get(url, auth=HTTPBasicAuth(login, password), timeout=5, stream=True)
