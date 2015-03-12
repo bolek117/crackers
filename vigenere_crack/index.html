@@ -1,0 +1,36 @@
+<html>
+<head>
+    <title>Vigenere Crack</title>
+    <script src="jquery-2.1.3.min.js"></script>
+    <script src="vigenere_crack.js"></script>
+    
+    <style>
+        textarea {
+            width: 100%;
+            height: 300px;
+            display: block;
+        }
+        
+        input {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <p>
+        <textarea id="encrypted" placeholder="Put Encrypted text here...">TO JEST BARDZO TAJNY TEKST</textarea>
+    </p>
+    
+    <p>
+        <input type="text" id="encryptionKey" placeholder="Encryption key..."/>
+    </p>
+    
+    <p>
+        <textarea id="decrypted" placeholder="Decrypted text" readonly="readonly"></textarea>
+    </p>
+    
+    <script>
+        $(document).ready(function() { init(); })
+    </script>
+</body>
+</html>
