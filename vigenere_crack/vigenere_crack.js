@@ -1,15 +1,22 @@
 Selectors = {
     encryptedText: '#encrypted',
     decryptedText: '#decrypted',
-    encryptionKey: '#encryptionKey'
+    encryptionKey: '#encryptionKey',
+    modeSelector: '#modeSelector'
 }
 
 Settings = {
-    debug: true
+    debug: true,
+    mode: {
+        encypt: 'encrypt',
+        decrypt: 'decrypt',
+        actual: undefined
+    }
 }
 
 function init() {
     Listeners.addDecryptListener();
+    Listeners.addChangeModeListener();
 }
 
 function d(obj) {
@@ -67,6 +74,21 @@ var Listeners = {
             var decrypted = Vigenere.encrypt(encrypted, key);
             $(Selectors.decryptedText).val(decrypted);
         }
+    },
+    
+    addChangeModeListener: function() {
+        Settings.mode.actual = Settings.mode.encypt;
+        
+        $(Selectors.modeSelector).on('click', function() {
+            if (Settings.mode.actual === Settings.mode.encypt) {
+                Settings.mode.actual = Settings.mode.decrypt;
+            } else {
+                Settings.mode.actual = Settings.mode.encypt;
+            }
+            
+            
+            d($(Selectors.modeSelector).innerHTML);
+        })
     }
 }
 
