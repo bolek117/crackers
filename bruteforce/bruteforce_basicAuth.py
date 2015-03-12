@@ -6,6 +6,7 @@ import socket
 import requests.auth
 import requests.exceptions
 
+
 def connect(url, login, password, timeout):
     from requests.auth import HTTPBasicAuth
 
@@ -22,9 +23,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("logins", help="File with logins. Every login in new line")
     parser.add_argument("passwords", help="File with passwords. Every password in new line")
+    parser.add_argument("url", help="URL of endpoint to brute force")
     parser.add_argument("-r", dest="retry", help="Retry on connection error", action="store_true")
     parser.add_argument("-t", dest="timeout", help="Connection timeout in seconds", type=int, default=5)
-    parser.add_argument("url", help="URL of endpoint to brute force")
     args = parser.parse_args()
 
     f_logins = args.logins
@@ -50,24 +51,37 @@ def main():
     d_logins = open(f_logins)
     d_passwords = open(f_passwords)
 
+    should_exit = False
 
     for i, line in enumerate(d_logins):
-        login = line[:-1]
+        login = line.rstrip('\n')
 
         for j, line2 in enumerate(d_passwords):
-            password = line2[:-1]
+            password = line2.rstrip('\n')
 
             head = str(i*n_passwords+j+1) + "/" + str(n_logins*n_passwords) + "\t" + login + ":" + password + "\t"
 
             should_retry = True
             while should_retry:
                 try:
-                    connect(url, login, password, 3)
+                    r = connect(url, login, password, 3)
+                    if (r.status_code == 200):
+                        print(head + "Valid pair found")
+                        should_exit = True
+                    else:
+                        print(head + str(r.status_code))
+                        break
                 except requests.exceptions.ConnectionError:
                     print(head + "Connection error")
                     should_retry = args.retry
 
-        d_passwords.seek(0)
+                if should_exit:
+                    break
+
+        if should_exit:
+            break
+        else:
+            d_passwords.seek(0)
 
     d_logins.close()
     d_passwords.close()
